@@ -4,10 +4,14 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 
 import cn.com.uama.longconnmanager.internal.LoginBody;
-import cn.com.uama.longconnmanager.internal.WSMessageParameterizedType;
+import cn.com.uama.longconnmanager.internal.WSMessageStringBodyDeserializer;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.WebSocket;
@@ -38,6 +42,9 @@ public class WSConnection {
     private static final int MAX_RETRY_COUNT = 5;
     // 正常关闭连接的 code
     private static final int NORMAL_CLOSE_CODE = 1000;
+
+    // body 为 String 的消息实体反射类型
+    private Type stringBodyMessageType;
 
     /**
      * 登录消息 code
@@ -70,11 +77,16 @@ public class WSConnection {
         void onLoginSuccess();
 
         /**
-         * 收到新的消息
-         * @param connection 连接对象
-         * @param text 消息字符串
+         * 登录失败
          */
-        void onMessage(WSConnection connection, String text);
+        void onLoginFailure();
+
+        /**
+         * 收到新消息
+         * @param connection 连接对象
+         * @param message 消息对象
+         */
+        void onMessage(WSConnection connection, WSMessage<String> message);
 
         /**
          * 正常关闭
@@ -84,7 +96,7 @@ public class WSConnection {
         /**
          * 连接失败
          */
-        void onConnectionFailed();
+        void onConnectionFailure();
 
         /**
          * 失去连接
@@ -95,29 +107,23 @@ public class WSConnection {
     public static class SimpleWSListener implements WSListener {
 
         @Override
-        public void onLoginSuccess() {
+        public void onLoginSuccess() {}
 
+        @Override
+        public void onLoginFailure() {}
+
+        @Override
+        public void onMessage(WSConnection connection, WSMessage<String> message) {
         }
 
         @Override
-        public void onMessage(WSConnection connection, String text) {
-
-        }
+        public void onClosed() {}
 
         @Override
-        public void onClosed() {
-
-        }
+        public void onConnectionFailure() {}
 
         @Override
-        public void onConnectionFailed() {
-
-        }
-
-        @Override
-        public void onDisconnected() {
-
-        }
+        public void onDisconnected() {}
     }
 
     public WSConnection(String url, String token, SimpleWSListener listener) {
@@ -128,7 +134,10 @@ public class WSConnection {
         this.token = token;
         this.listener = listener;
         isLoggedIn = false;
-        gson = new Gson();
+        stringBodyMessageType = new TypeToken<WSMessage<String>>(){}.getType();
+        gson = new GsonBuilder()
+                .registerTypeAdapter(stringBodyMessageType, new WSMessageStringBodyDeserializer())
+                .create();
         handler = new Handler(Looper.getMainLooper());
 
         connect();
@@ -155,12 +164,14 @@ public class WSConnection {
             @Override
             public void onMessage(WebSocket webSocket, final String text) {
                 if (isLoggedIn) {
+                    final WSMessage<String> message = gson.fromJson(text, stringBodyMessageType);
+                    if (message == null) return;
                     // 如果已经登录，直接回调收到的消息
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
                             if (listener != null) {
-                                listener.onMessage(WSConnection.this, text);
+                                listener.onMessage(WSConnection.this, message);
                             }
                         }
                     });
@@ -179,6 +190,16 @@ public class WSConnection {
                                     public void run() {
                                         if (listener != null) {
                                             listener.onLoginSuccess();
+                                        }
+                                    }
+                                });
+                            } else {
+                                // 登录失败
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (listener != null) {
+                                            listener.onLoginFailure();
                                         }
                                     }
                                 });
@@ -243,7 +264,7 @@ public class WSConnection {
                 @Override
                 public void run() {
                     if (listener != null) {
-                        listener.onConnectionFailed();
+                        listener.onConnectionFailure();
                     }
                 }
             });
@@ -273,13 +294,13 @@ public class WSConnection {
     }
 
     /**
-     * 将接收到的字符串格式的消息转换为实体类
-     * @param text 字符串格式的消息
-     * @return 消息实体
+     * 将消息 body 字符串转换为实体类
+     * @param text body 的字符串格式
+     * @return 消息 body 实体
      */
-    public <T> WSMessage<T> parseMessage(String text, Class<T> clazz) {
+    public <T> T parseBody(String text, Class<T> clazz) {
         try {
-            return gson.fromJson(text, new WSMessageParameterizedType<>(clazz));
+            return gson.fromJson(text, clazz);
         } catch (JsonSyntaxException e) {
             e.printStackTrace();
         }

@@ -55,23 +55,26 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onMessage(WSConnection connection, String text) {
-                        WSMessage<TestBody> message = connection.parseMessage(text, TestBody.class);
-                        if (message != null) {
-                            WSMessageCode messageCode = WSMessageCode.parse(message.getCode());
-                            if (messageCode != null) {
-                                // 获取业务类型
-                                int businessType = messageCode.getBusinessType();
-                                // 获取业务码值
-                                int businessCode = messageCode.getBusinessCode();
-                                // 获取消息类型
-                                int messageType = messageCode.getMessageType();
-                            }
+                    public void onLoginFailure() {
+                        adapter.addSystemMessage("登录失败");
+                    }
 
-                            TestBody body = message.getBody();
-                            if (body != null) {
-                                adapter.addServerMessage(body.test);
-                            }
+                    @Override
+                    public void onMessage(WSConnection connection, WSMessage<String> message) {
+
+                        WSMessageCode messageCode = WSMessageCode.parse(message.getCode());
+                        if (messageCode != null) {
+                            // 获取业务类型
+                            int businessType = messageCode.getBusinessType();
+                            // 获取业务码值
+                            int businessCode = messageCode.getBusinessCode();
+                            // 获取消息类型
+                            int messageType = messageCode.getMessageType();
+                        }
+
+                        TestBody body = connection.parseBody(message.getBody(), TestBody.class);
+                        if (body != null) {
+                            adapter.addServerMessage(body.test);
                         }
                     }
 
@@ -81,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onConnectionFailed() {
+                    public void onConnectionFailure() {
                         adapter.addSystemMessage("5次尝试之后，连接失败");
                     }
 
