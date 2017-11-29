@@ -332,7 +332,7 @@ public class WSConnection {
     /**
      * @return 当前连接的 url 地址
      */
-    String getUrl() {
+    public String getUrl() {
         return url;
     }
 }
