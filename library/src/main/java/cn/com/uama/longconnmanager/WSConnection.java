@@ -328,4 +328,11 @@ public class WSConnection {
     public boolean isLoggedIn() {
         return isLoggedIn;
     }
+
+    /**
+     * @return 当前连接的 url 地址
+     */
+    String getUrl() {
+        return url;
+    }
 }

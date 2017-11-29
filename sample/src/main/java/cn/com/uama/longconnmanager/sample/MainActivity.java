@@ -112,8 +112,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        wsConnection.close();
-        LMLongConnManager.releaseConnection(url);
+        LMLongConnManager.releaseConnection(wsConnection);
     }
 
     public void closeConnection(View view) {

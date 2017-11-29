@@ -40,7 +40,7 @@ public class LMLongConnManager {
         // 释放旧的连接
         WSConnection oldConnection = connectionMap.get(url);
         if (oldConnection != null) {
-            releaseConnection(url);
+            releaseConnection(oldConnection);
         }
 
         // 创建新的连接
@@ -51,11 +51,11 @@ public class LMLongConnManager {
 
     /**
      * 释放连接
-     * @param url 要释放的连接的 url
+     * @param connection 要释放的连接对象
      */
-    public static void releaseConnection(String url) {
-        WSConnection connection = connectionMap.remove(url);
+    public static void releaseConnection(WSConnection connection) {
         if (connection != null) {
+            connectionMap.remove(connection.getUrl());
             connection.close();
         }
     }
