@@ -27,7 +27,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'com.android.support:recyclerview-v7:26.1.0'
     implementation project(':library')
-//    implementation 'com.github.UamaHZ:long-conn-manager:0.0.3'
+//    implementation 'com.github.UamaHZ:long-conn-manager:0.0.4'
 }
 
 repositories {
