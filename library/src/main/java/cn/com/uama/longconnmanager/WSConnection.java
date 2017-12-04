@@ -47,17 +47,23 @@ public class WSConnection {
     private Type stringBodyMessageType;
 
     /**
-     * 登录消息 code
+     * 业务类型
      */
-    static class LoginCode {
+    static class BusinessType {
         /**
-         * 登录请求
+         * 系统
          */
-        static final String REQUEST = "1100000000";
+        static final int SYSTEM = 1;
+    }
+
+    /**
+     * 业务码
+     */
+    static class BusinessCode {
         /**
-         * 登录返回
+         * 登录
          */
-        static final String RESPONSE = "1200000000";
+        static final int LOGIN = 0;
     }
 
     /**
@@ -178,8 +184,11 @@ public class WSConnection {
                 } else {
                     WSMessage loginMessage = parseMessage(text);
                     if (loginMessage != null) {
-                        String code = loginMessage.getCode();
-                        if (LoginCode.RESPONSE.equals(code)) {
+                        WSMessageCode messageCode = WSMessageCode.parse(loginMessage.getCode());
+                        if (messageCode != null
+                                && messageCode.getBusinessType() == BusinessType.SYSTEM
+                                && messageCode.isServer()
+                                && messageCode.getBusinessCode() == BusinessCode.LOGIN) {
                             String status = loginMessage.getStatus();
                             if (MessageStatus.SUCCESS.equals(status)) {
                                 // 登录成功
@@ -268,6 +277,8 @@ public class WSConnection {
                     }
                 }
             });
+            // 重置重连次数
+            retryCount = 0;
         } else {
             // 延迟 1s 进行重连
             handler.postDelayed(new Runnable() {
@@ -313,7 +324,8 @@ public class WSConnection {
      */
     private String loginMessage() {
         WSMessage<LoginBody> message = new WSMessage<>();
-        message.setCode(LoginCode.REQUEST);
+        WSMessageCode loginCode = WSMessageCode.create(1, 1, 0);
+        message.setCode(loginCode.toText());
         message.setBody(new LoginBody(token));
         return gson.toJson(message);
     }

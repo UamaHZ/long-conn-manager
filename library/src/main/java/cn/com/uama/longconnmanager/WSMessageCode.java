@@ -112,6 +112,6 @@ public class WSMessageCode {
      * @return 转换过后的码值
      */
     public String toText() {
-        return String.format(Locale.CHINA, "%d%d%08d", businessType, messageType, businessCode);
+        return String.format(Locale.CHINA, "%d%d%06d", businessType, messageType, businessCode);
     }
 }

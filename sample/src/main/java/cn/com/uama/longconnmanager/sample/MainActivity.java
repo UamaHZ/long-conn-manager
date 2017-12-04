@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         adapter = new MainAdapter();
         recyclerView.setAdapter(adapter);
 
+        adapter.addSystemMessage("正在连接...");
         wsConnection = LMLongConnManager.newConnection(url,
                 "",
                 new WSConnection.SimpleWSListener() {
@@ -123,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void connect(View view) {
+        adapter.addSystemMessage("正在连接...");
         wsConnection.connect();
     }
 }
