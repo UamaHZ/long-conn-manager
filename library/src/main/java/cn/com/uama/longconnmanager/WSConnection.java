@@ -47,16 +47,6 @@ public class WSConnection {
     private Type stringBodyMessageType;
 
     /**
-     * 业务类型
-     */
-    static class BusinessType {
-        /**
-         * 系统
-         */
-        static final int SYSTEM = 1;
-    }
-
-    /**
      * 业务码
      */
     static class BusinessCode {
@@ -186,7 +176,7 @@ public class WSConnection {
                     if (loginMessage != null) {
                         WSMessageCode messageCode = WSMessageCode.parse(loginMessage.getCode());
                         if (messageCode != null
-                                && messageCode.getBusinessType() == BusinessType.SYSTEM
+                                && messageCode.getBusinessType() == WSBusinessType.SYSTEM
                                 && messageCode.isServer()
                                 && messageCode.getBusinessCode() == BusinessCode.LOGIN) {
                             String status = loginMessage.getStatus();
@@ -324,7 +314,7 @@ public class WSConnection {
      */
     private String loginMessage() {
         WSMessage<LoginBody> message = new WSMessage<>();
-        WSMessageCode loginCode = WSMessageCode.create(1, 1, 0);
+        WSMessageCode loginCode = WSMessageCode.createClient(WSBusinessType.SYSTEM, BusinessCode.LOGIN);
         message.setCode(loginCode.toText());
         message.setBody(new LoginBody(token));
         return gson.toJson(message);

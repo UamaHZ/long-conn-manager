@@ -40,6 +40,16 @@ public class WSMessageCode {
     }
 
     /**
+     * 创建客户端发送消息实体
+     * @param businessType 业务类型
+     * @param businessCode 业务码值
+     * @return 创建好的客户端消息实体
+     */
+    public static WSMessageCode createClient(int businessType, int businessCode) {
+        return create(businessType, WSMessageType.CLIENT, businessCode);
+    }
+
+    /**
      * 创建消息实体
      * @param businessType 业务类型
      * @param messageType 消息类型

@@ -15,11 +15,14 @@ import java.util.Map;
 
 import cn.com.uama.longconnmanager.LMLongConnManager;
 import cn.com.uama.longconnmanager.R;
+import cn.com.uama.longconnmanager.WSBusinessType;
 import cn.com.uama.longconnmanager.WSConnection;
 import cn.com.uama.longconnmanager.WSMessage;
 import cn.com.uama.longconnmanager.WSMessageCode;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final int BUSINESS_CODE_TEST = 1;
 
     private EditText editText;
     private RecyclerView recyclerView;
@@ -69,13 +72,14 @@ public class MainActivity extends AppCompatActivity {
                             int businessType = messageCode.getBusinessType();
                             // 获取业务码值
                             int businessCode = messageCode.getBusinessCode();
-                            // 获取消息类型
-                            int messageType = messageCode.getMessageType();
-                        }
-
-                        TestBody body = connection.parseBody(message.getBody(), TestBody.class);
-                        if (body != null) {
-                            adapter.addServerMessage(body.test);
+                            if (businessType == WSBusinessType.SYSTEM
+                                    && messageCode.isServer()
+                                    && businessCode == BUSINESS_CODE_TEST) {
+                                TestBody body = connection.parseBody(message.getBody(), TestBody.class);
+                                if (body != null) {
+                                    adapter.addServerMessage(body.test);
+                                }
+                            }
                         }
                     }
 
@@ -104,7 +108,8 @@ public class MainActivity extends AppCompatActivity {
         body.test = text;
 
         WSMessage<TestBody> message = new WSMessage<>();
-        message.setCode("1100000001");
+        WSMessageCode messageCode = WSMessageCode.createClient(WSBusinessType.SYSTEM, BUSINESS_CODE_TEST);
+        message.setCode(messageCode.toText());
         message.setBody(body);
 
         if (wsConnection.send(message)) {
