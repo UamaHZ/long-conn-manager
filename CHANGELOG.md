@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 0.0.5 *(2017-12-12)*
+
+* 去除 library 中对 appcompat-v7 的依赖
+
 ## Version 0.0.4 *(2017-12-04)*
 
 * 业务码长度改为 6 位
